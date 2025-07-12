@@ -61,10 +61,10 @@ Access via: http://localhost:8080
 **Backend (Python API)** — assuming FastAPI or Flask entrypoint in `main.py`:
 
 ```bash
-docker run -d -p 5000:5000 ghcr.io/ob-adams/backend:latest
+docker run -d -p 8000:8000 ghcr.io/ob-adams/backend:latest
 ```
 
-Access via: http://localhost:5000
+Access via: http://localhost:8000
 
 ---
 
