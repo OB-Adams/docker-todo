@@ -1,4 +1,4 @@
-# 🚨 Emergency App — Frontend & Backend with GitHub Container Registry Integration
+# ✅ ToDo App — Frontend & Backend with GitHub Container Registry Integration
 
 This project is a full-stack emergency response application built with a containerized architecture. It consists of:
 
