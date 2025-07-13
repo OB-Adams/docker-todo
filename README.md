@@ -2,7 +2,7 @@
 
 This project is a full-stack emergency response application built with a containerized architecture. It consists of:
 
-- **Frontend**: Static web interface served by an NGINX container.  
+- **Frontend**: Static web interface served by an NGINX container.
 - **Backend**: Python (FastAPI or Flask) API structured as a Python package in `src/mysite/`.
 
 Docker is used to containerize both services, and GitHub Actions automates the CI pipeline to push images to **GitHub Container Registry (GHCR)**.
@@ -25,6 +25,7 @@ myproject/
 │       └── mysite/
 │           ├── __init__.py
 │           └── main.py
+├── docker-compose.yml
 ├── .github/
 │   └── workflows/
 │       └── docker.yml
@@ -68,11 +69,51 @@ Access via: http://localhost:8000
 
 ---
 
+## 📦 Running with Docker Compose
+
+This project supports Docker Compose to simplify development and orchestration.
+
+### ▶️ Start the Services
+
+Run in detached mode:
+
+```bash
+docker-compose up -d
+```
+
+Or run in the foreground (shows logs):
+
+```bash
+docker-compose up
+```
+
+### 🛑 Stop the Services
+
+```bash
+docker-compose down
+```
+
+### 📂 File Overview
+
+- `docker-compose.yml` – defines the multi-container stack with shared networks/volumes
+- `frontend/`, `backend/` – contain service-specific Dockerfiles
+
+### 🐳 Common Commands
+
+| Task                  | Command                           |
+| --------------------- | --------------------------------- |
+| Build images only     | `docker-compose build`            |
+| View logs             | `docker-compose logs -f`          |
+| Restart a service     | `docker-compose restart <name>`   |
+| Run a one-off command | `docker-compose exec <name> bash` |
+
+---
+
 ## ⚙️ GitHub Actions + GHCR
 
 A GitHub Actions workflow is defined to automatically:
 
-1. Build Docker images for both frontend and backend  
+1. Build Docker images for both frontend and backend
 2. Push them to GHCR at `ghcr.io/ob-adams`
 
 ### 🔐 Permissions
@@ -85,11 +126,11 @@ The workflow uses the built-in `GITHUB_TOKEN` and `docker/login-action@v3` to au
 
 ### ✅ How It Works
 
-- Trigger: Push to `main` branch  
-- Steps:  
-  - Lowercase your GitHub username  
-  - Login to GHCR  
-  - Build frontend and backend images  
+- Trigger: Push to `main` branch
+- Steps:
+  - Lowercase your GitHub username
+  - Login to GHCR
+  - Build frontend and backend images
   - Push images to:
     - `ghcr.io/ob-adams/frontend:latest`
     - `ghcr.io/ob-adams/backend:latest`
@@ -144,8 +185,8 @@ https://github.com/users/ob-adams/packages
 
 ### 🛡️ Change Visibility (Public / Private)
 
-1. Go to the image (frontend or backend)  
-2. Click ⚙️ Package Settings  
+1. Go to the image (frontend or backend)
+2. Click ⚙️ Package Settings
 3. Toggle **Package visibility**
 
 ---
@@ -177,18 +218,18 @@ These images can now be used in:
 image: ghcr.io/ob-adams/frontend:latest
 ```
 
-- CI/CD pipelines  
-- Fly.io, Railway, Render  
+- CI/CD pipelines
+- Fly.io, Railway, Render
 - GitHub Codespaces
 
 ---
 
 ## 💡 Future Improvements
 
-- ✅ Auto-versioning tags (e.g., `v1.0.0`, commit SHA)  
-- ✅ Combine with `docker-compose.yml`  
-- ☁️ Deploy to Kubernetes with Helm  
-- 🔐 Add JWT or OAuth authentication in backend  
+- ✅ Auto-versioning tags (e.g., `v1.0.0`, commit SHA)
+- ✅ Combine with `docker-compose.yml`
+- ☁️ Deploy to Kubernetes with Helm
+- 🔐 Add JWT or OAuth authentication in backend
 - 🧭 Add Google Maps API to frontend for real-time tracking
 
 ---
@@ -201,10 +242,11 @@ image: ghcr.io/ob-adams/frontend:latest
 
 ## 🧠 TL;DR
 
-- This app is split into `frontend/` and `backend/` with separate Dockerfiles  
-- Backend follows a proper Python package structure under `src/`  
-- GitHub Actions pushes both images to `ghcr.io/ob-adams`  
-- You can now pull and deploy these images anywhere Docker runs
+- This app is split into `frontend/` and `backend/` with separate Dockerfiles
+- Backend follows a proper Python package structure under `src/`
+- GitHub Actions pushes both images to `ghcr.io/ob-adams`
+- You can now use `docker-compose up -d` to run the entire stack locally
+- Images can be pulled or deployed anywhere Docker is supported
 
 ---
 
