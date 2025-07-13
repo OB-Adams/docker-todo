@@ -1,11 +1,12 @@
-# ✅ ToDo App — Frontend & Backend with GitHub Container Registry Integration
+# ✅ ToDo App — Frontend, Backend & MongoDB with GitHub Container Registry Integration
 
 This project is a full-stack emergency response application built with a containerized architecture. It consists of:
 
-- **Frontend**: Static web interface served by an NGINX container.
-- **Backend**: Python (FastAPI or Flask) API structured as a Python package in `src/mysite/`.
+- **Frontend**: Static web interface served by an NGINX container
+- **Backend**: Python API (FastAPI or Flask) in `src/mysite/`
+- **Database**: MongoDB container with persistent volume for data storage
 
-Docker is used to containerize both services, and GitHub Actions automates the CI pipeline to push images to **GitHub Container Registry (GHCR)**.
+Docker Compose manages the services, and GitHub Actions pushes images to **GitHub Container Registry (GHCR)**.
 
 ---
 
@@ -49,97 +50,148 @@ docker build -t ghcr.io/ob-adams/frontend:latest ./frontend
 docker build -t ghcr.io/ob-adams/backend:latest ./backend
 ```
 
-### 🚀 Run Locally
+### 🚀 Run Locally (Standalone)
 
-**Frontend (NGINX):**
+**Frontend:**
 
 ```bash
 docker run -d -p 8080:80 ghcr.io/ob-adams/frontend:latest
 ```
 
-Access via: http://localhost:8080
+→ Access: http://localhost:8080
 
-**Backend (Python API)** — assuming FastAPI or Flask entrypoint in `main.py`:
+**Backend:**
 
 ```bash
 docker run -d -p 8000:8000 ghcr.io/ob-adams/backend:latest
 ```
 
-Access via: http://localhost:8000
+→ Access: http://localhost:8000
+
+---
+
+## 🗃️ MongoDB with Persistent Storage
+
+MongoDB is included in `docker-compose.yml` and uses a **named volume** to persist data:
+
+```yaml
+services:
+  mongodb:
+    image: mongo:8.0-rc-noble
+    container_name: mysite-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
+```
+
+Access shell:
+
+```bash
+docker exec -it mysite-mongodb mongosh
+```
 
 ---
 
 ## 📦 Running with Docker Compose
 
-This project supports Docker Compose to simplify development and orchestration.
-
-### ▶️ Start the Services
-
-Run in detached mode:
+### ▶️ Start All Services
 
 ```bash
 docker-compose up -d
 ```
 
-Or run in the foreground (shows logs):
-
-```bash
-docker-compose up
-```
-
-### 🛑 Stop the Services
+### 🛑 Stop Services
 
 ```bash
 docker-compose down
 ```
 
-### 📂 File Overview
+### 🧼 Cleanup Volumes
 
-- `docker-compose.yml` – defines the multi-container stack with shared networks/volumes
-- `frontend/`, `backend/` – contain service-specific Dockerfiles
-
-### 🐳 Common Commands
-
-| Task                  | Command                           |
-| --------------------- | --------------------------------- |
-| Build images only     | `docker-compose build`            |
-| View logs             | `docker-compose logs -f`          |
-| Restart a service     | `docker-compose restart <name>`   |
-| Run a one-off command | `docker-compose exec <name> bash` |
+```bash
+docker-compose down -v
+```
 
 ---
 
 ## ⚙️ GitHub Actions + GHCR
 
-A GitHub Actions workflow is defined to automatically:
+This repo uses GitHub Actions to:
 
-1. Build Docker images for both frontend and backend
-2. Push them to GHCR at `ghcr.io/ob-adams`
+- Build backend & frontend images
+- Push them to:
+  - `ghcr.io/ob-adams/frontend:latest`
+  - `ghcr.io/ob-adams/backend:latest`
 
-### 🔐 Permissions
-
-The workflow uses the built-in `GITHUB_TOKEN` and `docker/login-action@v3` to authenticate securely.
-
-### 📍 Workflow Location
+### 📍 Workflow File
 
 `.github/workflows/docker.yml`
 
-### ✅ How It Works
+### 🔐 Auth
 
-- Trigger: Push to `main` branch
-- Steps:
-  - Lowercase your GitHub username
-  - Login to GHCR
-  - Build frontend and backend images
-  - Push images to:
-    - `ghcr.io/ob-adams/frontend:latest`
-    - `ghcr.io/ob-adams/backend:latest`
+Uses `GITHUB_TOKEN` + `docker/login-action@v3` for secure access.
 
 ---
 
-## 🧠 Backend Entrypoint Notes
+## 🧪 API Testing
 
-If you're using FastAPI, make sure your `main.py` in `src/mysite/` contains something like:
+FastAPI interactive docs:
+
+```
+http://localhost:8000/docs
+```
+
+Sample `POST /todos`:
+
+```json
+{
+  "content": "Buy milk"
+}
+```
+
+---
+
+## 📥 Pull from GHCR Remotely
+
+```bash
+docker pull ghcr.io/ob-adams/frontend:latest
+docker pull ghcr.io/ob-adams/backend:latest
+```
+
+For private images:
+
+```bash
+echo <YOUR_TOKEN> | docker login ghcr.io -u ob-adams --password-stdin
+```
+
+---
+
+## 📤 Push to GitHub
+
+```bash
+git add .
+git commit -m "Add MongoDB with persistent Docker volume"
+git push origin main
+```
+
+---
+
+## 🌐 Deployment Options
+
+- ✅ Kubernetes
+- ✅ GitHub Codespaces
+- ✅ Render, Railway, Fly.io
+- ✅ Any CI/CD pipeline
+
+---
+
+## 🧠 Backend Entrypoint Tips
+
+**FastAPI:**
 
 ```python
 from fastapi import FastAPI
@@ -147,17 +199,17 @@ from fastapi import FastAPI
 app = FastAPI()
 
 @app.get("/")
-def read_root():
-    return {"message": "Backend is live"}
+def root():
+    return {"status": "Backend is running"}
 ```
 
-And your `Dockerfile` CMD should point to it like:
+**Dockerfile CMD:**
 
 ```Dockerfile
 CMD ["uvicorn", "mysite.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-If using Flask:
+**Flask:**
 
 ```python
 from flask import Flask
@@ -166,71 +218,39 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Backend is live"
-```
-
-And use:
-
-```Dockerfile
-CMD ["python", "-m", "mysite.main"]
+    return "Hello from Flask"
 ```
 
 ---
 
-## 📦 View and Manage Packages
+## 📦 Useful Docker Commands
 
-### 🔗 Package Dashboard
-
-https://github.com/users/ob-adams/packages
-
-### 🛡️ Change Visibility (Public / Private)
-
-1. Go to the image (frontend or backend)
-2. Click ⚙️ Package Settings
-3. Toggle **Package visibility**
+| Task                | Command                            |
+| ------------------- | ---------------------------------- |
+| Build only          | `docker-compose build`             |
+| View logs           | `docker-compose logs -f`           |
+| Exec into container | `docker-compose exec backend bash` |
+| Restart service     | `docker-compose restart backend`   |
 
 ---
 
-## 🧪 Test Pulling Images
+## 🔒 Package Visibility
 
-From any machine with Docker:
+To make GHCR images public:
 
-```bash
-docker pull ghcr.io/ob-adams/frontend:latest
-docker pull ghcr.io/ob-adams/backend:latest
-```
-
-If the images are private, authenticate:
-
-```bash
-echo YOUR_GITHUB_PAT | docker login ghcr.io -u ob-adams --password-stdin
-```
+1. Visit: https://github.com/users/ob-adams/packages
+2. Click ⚙️ on package
+3. Set **Package visibility** to public
 
 ---
 
-## 🌍 Deployment Use Cases
+## 🧭 Future Roadmap
 
-These images can now be used in:
-
-- Kubernetes pods:
-
-```yaml
-image: ghcr.io/ob-adams/frontend:latest
-```
-
-- CI/CD pipelines
-- Fly.io, Railway, Render
-- GitHub Codespaces
-
----
-
-## 💡 Future Improvements
-
-- ✅ Auto-versioning tags (e.g., `v1.0.0`, commit SHA)
-- ✅ Combine with `docker-compose.yml`
-- ☁️ Deploy to Kubernetes with Helm
-- 🔐 Add JWT or OAuth authentication in backend
-- 🧭 Add Google Maps API to frontend for real-time tracking
+- [ ] Add JWT/OAuth2 authentication
+- [ ] Add Google Maps API for frontend
+- [ ] Enable auto-versioning (`v1.0.0`, commit SHAs)
+- [ ] Helm charts for Kubernetes
+- [x] MongoDB with Docker volumes
 
 ---
 
@@ -242,11 +262,11 @@ image: ghcr.io/ob-adams/frontend:latest
 
 ## 🧠 TL;DR
 
-- This app is split into `frontend/` and `backend/` with separate Dockerfiles
-- Backend follows a proper Python package structure under `src/`
-- GitHub Actions pushes both images to `ghcr.io/ob-adams`
-- You can now use `docker-compose up -d` to run the entire stack locally
-- Images can be pulled or deployed anywhere Docker is supported
+- 💻 Split into `frontend/` (NGINX) and `backend/` (FastAPI)
+- 🗃️ MongoDB included with persistent volume
+- 🐳 Docker Compose manages all services
+- 🏗️ CI/CD with GitHub Actions → GHCR
+- 🔗 All components now work together and are deployable anywhere
 
 ---
 
