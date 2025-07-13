@@ -3,7 +3,7 @@
 This project is a full-stack emergency response application built with a containerized architecture. It consists of:
 
 - **Frontend**: Static web interface served by an NGINX container
-- **Backend**: Python API (FastAPI or Flask) in `src/mysite/`
+- **Backend**: Python API (FastAPI) in `src/mysite/`
 - **Database**: MongoDB container with persistent volume for data storage
 
 It supports container image hosting via both:
