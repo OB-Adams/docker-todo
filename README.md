@@ -1,4 +1,4 @@
-# ✅ ToDo App — Frontend, Backend & MongoDB with GitHub Container Registry Integration
+# ✅ ToDo App — Frontend, Backend & MongoDB with GHCR + Docker Hub
 
 This project is a full-stack emergency response application built with a containerized architecture. It consists of:
 
@@ -6,7 +6,10 @@ This project is a full-stack emergency response application built with a contain
 - **Backend**: Python API (FastAPI or Flask) in `src/mysite/`
 - **Database**: MongoDB container with persistent volume for data storage
 
-Docker Compose manages the services, and GitHub Actions pushes images to **GitHub Container Registry (GHCR)**.
+It supports container image hosting via both:
+
+- 🐳 **Docker Hub** (`obobob/todo-frontend`, `obobob/todo-backend`)
+- 🐙 **GitHub Container Registry (GHCR)** (auto-pushed via GitHub Actions)
 
 ---
 
@@ -34,69 +37,7 @@ myproject/
 
 ---
 
-## 🐳 Docker Setup
-
-### 🔧 Build Images Locally
-
-**Frontend:**
-
-```bash
-docker build -t ghcr.io/ob-adams/frontend:latest ./frontend
-```
-
-**Backend:**
-
-```bash
-docker build -t ghcr.io/ob-adams/backend:latest ./backend
-```
-
-### 🚀 Run Locally (Standalone)
-
-**Frontend:**
-
-```bash
-docker run -d -p 8080:80 ghcr.io/ob-adams/frontend:latest
-```
-
-→ Access: http://localhost:8080
-
-**Backend:**
-
-```bash
-docker run -d -p 8000:8000 ghcr.io/ob-adams/backend:latest
-```
-
-→ Access: http://localhost:8000
-
----
-
-## 🗃️ MongoDB with Persistent Storage
-
-MongoDB is included in `docker-compose.yml` and uses a **named volume** to persist data:
-
-```yaml
-services:
-  mongodb:
-    image: mongo:8.0-rc-noble
-    container_name: mysite-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-
-volumes:
-  mongo-data:
-```
-
-Access shell:
-
-```bash
-docker exec -it mysite-mongodb mongosh
-```
-
----
-
-## 📦 Running with Docker Compose
+## 📦 Docker Compose Setup
 
 ### ▶️ Start All Services
 
@@ -118,36 +59,125 @@ docker-compose down -v
 
 ---
 
-## ⚙️ GitHub Actions + GHCR
+## 🗃️ MongoDB with Persistent Storage
 
-This repo uses GitHub Actions to:
+```yaml
+services:
+  mongodb:
+    image: mongo:8.0-rc-noble
+    container_name: mysite-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
 
-- Build backend & frontend images
-- Push them to:
-  - `ghcr.io/ob-adams/frontend:latest`
-  - `ghcr.io/ob-adams/backend:latest`
+volumes:
+  mongo-data:
+```
 
-### 📍 Workflow File
+To access shell:
+
+```bash
+docker exec -it mysite-mongodb mongosh
+```
+
+---
+
+## 🚀 Manual Docker Build & Run
+
+### Build Locally
+
+```bash
+docker build -t obobob/todo-frontend:latest ./frontend
+docker build -t obobob/todo-backend:latest ./backend
+```
+
+### Run Locally
+
+```bash
+docker run -d -p 8080:80 obobob/todo-frontend:latest
+docker run -d -p 8000:8000 obobob/todo-backend:latest
+```
+
+---
+
+## 🐳 Docker Hub
+
+- Frontend: [`obobob/todo-frontend`](https://hub.docker.com/r/obobob/todo-frontend)
+- Backend: [`obobob/todo-backend`](https://hub.docker.com/r/obobob/todo-backend)
+
+### Pull Images
+
+```bash
+docker pull obobob/todo-frontend:latest
+docker pull obobob/todo-backend:latest
+```
+
+### Push Images (manual)
+
+```bash
+docker push obobob/todo-frontend:latest
+docker push obobob/todo-backend:latest
+```
+
+---
+
+## 🐙 GitHub Container Registry (GHCR)
+
+Your GitHub Actions workflow auto-builds and publishes Docker images to:
+
+- `ghcr.io/ob-adams/frontend:latest`
+- `ghcr.io/ob-adams/backend:latest`
+
+### Pull from GHCR
+
+```bash
+docker pull ghcr.io/ob-adams/frontend:latest
+docker pull ghcr.io/ob-adams/backend:latest
+```
+
+### Private Access
+
+```bash
+echo <YOUR_TOKEN> | docker login ghcr.io -u ob-adams --password-stdin
+```
+
+### Make Public (optional)
+
+1. Go to: [https://github.com/users/ob-adams/packages](https://github.com/users/ob-adams/packages)
+2. Click the image → ⚙️ → Change visibility to **Public**
+
+---
+
+## ⚙️ GitHub Actions Workflow
 
 `.github/workflows/docker.yml`
 
-### 🔐 Auth
+This builds images on `push` to `main`:
 
-Uses `GITHUB_TOKEN` + `docker/login-action@v3` for secure access.
+```yaml
+docker build -t ghcr.io/<owner>/frontend ./frontend
+docker build -t ghcr.io/<owner>/backend ./backend
+docker push ghcr.io/<owner>/frontend
+docker push ghcr.io/<owner>/backend
+```
+
+No secrets needed — uses `${{ secrets.GITHUB_TOKEN }}` for auth.
 
 ---
 
 ## 🧪 API Testing
 
-FastAPI interactive docs:
+FastAPI Swagger UI:
 
-```
+```bash
 http://localhost:8000/docs
 ```
 
-Sample `POST /todos`:
+Example:
 
 ```json
+POST /todos
 {
   "content": "Buy milk"
 }
@@ -155,47 +185,12 @@ Sample `POST /todos`:
 
 ---
 
-## 📥 Pull from GHCR Remotely
-
-```bash
-docker pull ghcr.io/ob-adams/frontend:latest
-docker pull ghcr.io/ob-adams/backend:latest
-```
-
-For private images:
-
-```bash
-echo <YOUR_TOKEN> | docker login ghcr.io -u ob-adams --password-stdin
-```
-
----
-
-## 📤 Push to GitHub
-
-```bash
-git add .
-git commit -m "Add MongoDB with persistent Docker volume"
-git push origin main
-```
-
----
-
-## 🌐 Deployment Options
-
-- ✅ Kubernetes
-- ✅ GitHub Codespaces
-- ✅ Render, Railway, Fly.io
-- ✅ Any CI/CD pipeline
-
----
-
-## 🧠 Backend Entrypoint Tips
+## 🧠 Entrypoint Examples
 
 **FastAPI:**
 
 ```python
 from fastapi import FastAPI
-
 app = FastAPI()
 
 @app.get("/")
@@ -203,54 +198,33 @@ def root():
     return {"status": "Backend is running"}
 ```
 
-**Dockerfile CMD:**
+**Docker CMD:**
 
 ```Dockerfile
 CMD ["uvicorn", "mysite.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-**Flask:**
+---
 
-```python
-from flask import Flask
+## 🔧 Useful Commands
 
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Hello from Flask"
-```
+| Task                | Command                                |
+| ------------------- | -------------------------------------- |
+| Build only          | `docker compose build`                 |
+| View logs           | `docker compose logs -f`               |
+| Exec into container | `docker compose exec -it backend bash` |
+| Restart service     | `docker compose restart backend`       |
 
 ---
 
-## 📦 Useful Docker Commands
-
-| Task                | Command                            |
-| ------------------- | ---------------------------------- |
-| Build only          | `docker-compose build`             |
-| View logs           | `docker-compose logs -f`           |
-| Exec into container | `docker-compose exec backend bash` |
-| Restart service     | `docker-compose restart backend`   |
-
----
-
-## 🔒 Package Visibility
-
-To make GHCR images public:
-
-1. Visit: https://github.com/users/ob-adams/packages
-2. Click ⚙️ on package
-3. Set **Package visibility** to public
-
----
-
-## 🧭 Future Roadmap
+## 🧭 Roadmap
 
 - [ ] Add JWT/OAuth2 authentication
-- [ ] Add Google Maps API for frontend
-- [ ] Enable auto-versioning (`v1.0.0`, commit SHAs)
+- [ ] Add Google Maps API integration
+- [ ] Enable auto-versioning (`v1.0.0`, Git SHA)
 - [ ] Helm charts for Kubernetes
-- [x] MongoDB with Docker volumes
+- [x] GHCR workflow
+- [x] Docker Hub integration
 
 ---
 
@@ -262,14 +236,14 @@ To make GHCR images public:
 
 ## 🧠 TL;DR
 
-- 💻 Split into `frontend/` (NGINX) and `backend/` (FastAPI)
-- 🗃️ MongoDB included with persistent volume
-- 🐳 Docker Compose manages all services
-- 🏗️ CI/CD with GitHub Actions → GHCR
-- 🔗 All components now work together and are deployable anywhere
+- 🐳 Built with Docker + Compose
+- 📦 MongoDB volume for data persistence
+- 🚀 GHCR (auto) + Docker Hub (manual)
+- 🔁 GitHub Actions handles CI/CD
+- 🔥 Deployable to any container platform
 
 ---
 
 ## 📜 License
 
-MIT License. See `LICENSE` file.
+MIT — See `LICENSE`
